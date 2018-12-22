@@ -1,0 +1,15 @@
+# Sending an invalid header to the server causes the server to still expect
+  a message, usually set to an unreasonable high number by the mistranslated 
+  header data. Which causes the allocation of an unreasonable large buffer
+  in expectance of message data.
+
+*Possible solution(s):
+ 1. 	Verify that the header is within the bounds of what could be expected
+    	(such as messagetypeID correctly representing an existing messagemanager),
+	and lenght being within a reasonable limit.	
+AND: 
+	*Close the connection.
+	
+2.	Set a max message lenght limit.
+AND:	
+	*Close connection if message length exceeds that limit.

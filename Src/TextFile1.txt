@@ -1,0 +1,95 @@
+﻿TODO/Active Issue
+
+
+Library responsibilities:
+
+Provide a simple server that follows a simple protocol
+
+Library usage guide:
+
+Create a solution for your derived application.
+Add reference to ServerBaseLibrary.
+Create an enum and add messagetypes (these are just to make it easier to )
+Create a manager for every messagetype, manager should derive from TcpServerBaseLibrary.IMessageManager
+Create a dictionary where you map together each messagetype with their respective manager.
+Pass that dictionary as an argument when you create a new server-object.
+
+Consumer responsibilities:
+
+Provide server object with expected messagetypes and respective parsers
+
+
+
+
+
+If the consumer of this library wants to add its own messagetype and parser?
+
+
+
+App code specification
+
+Functions:
+
+*Receive header (Responsibility 1)
+
+*Read whole message (Responsibility 2)
+*Parse read data (Depending on header) (Responsibility 3)
+*Determine what to do with received data (depending on message-type) (Responsibility 4)
+*Send response to client (if requested) (Responsibility 5)
+
+
+
+Application protocol specification
+
+All messages are prefixed with a 8 bit header, that on the receiving side is 
+passed into the shared struct to read lenght and type of incoming data-message, and returning the same data 
+to tell the other side to start sending rest of the message.
+
+
+Sending side:
+
+Lenght-prefix and actual message data is packed into a byte[], using the ApplicationProtocolHeader-struct helper method.
+Send byte[].
+Wait for acknowledgment from receiving side, the acknowledge message is essentially the receiving side saying 
+"I got your message and I understand more is coming, I am prepared so bring it on".
+Send rest of the message
+
+
+
+Max message : 
+
+---------------------------------------
+Advice on TCP programming
+
+To prevent deadlock situation, where a socket buffer reads data slower than it receives..
+Always keep a read operation running
+
+Data is read into a buffer, and then processed/scanned
+
+Send header without the message (only lenght-prefix first), and then send rest of message when lenght acknowledged
+
+Pros:
+First data transfer is minimal, since it doesn't also contain the whole message.
+
+
+Cons:
+
+
+Networking app gotchas and things to ponder:
+
+What happens when a connection is dropped halfway through a data-transfer?
+Meaning partial data would be sitting in the internal buffer.
+
+A: Read until buffer is clear, discard data.
+
+What happens when an expected message never arrives?
+A: Time-out.
+
+If the client sends a header that does not have a attached handler 
+(does not exist in the dictionary of messagemanager)
+
+Option 1:
+Shut down the connection <--
+
+Option 2:
+Respond with a header with negative values
